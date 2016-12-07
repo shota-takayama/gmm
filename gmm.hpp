@@ -6,6 +6,7 @@ class GMM {
 
 public:
   GMM(int _K, int _d);
+  void fit(cv::Mat X, int T);
   void fit(cv::Mat X, double e = 0.01);
   void show_params();
 
@@ -18,6 +19,7 @@ private:
   cv::Mat likelihood;
   cv::Mat expectate(cv::Mat X);
   void maximize(cv::Mat X, cv::Mat gamma);
+  double loglikelihood(cv::Mat gamma);
   cv::Mat slice(cv::Mat sigma, int k);
   cv::Mat posterior_prob(cv::Mat likelihood);
   cv::Mat gaussian(cv::Mat X);

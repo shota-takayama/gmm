@@ -18,6 +18,18 @@ GMM::GMM(int _K, int _d) {
 
 
 // estimate parameters: pi, mu, sigma
+void GMM::fit(cv::Mat X, int T) {
+  for(int t = 0; t < T; t++) {
+    cv::Mat gamma = expectate(X);
+    maximize(X, gamma);
+    double Q_hat = loglikelihood(gamma);
+    std::cout << Q_hat << std::endl;
+  }
+  std::cout << std::endl;
+}
+
+
+// estimate parameters: pi, mu, sigma
 void GMM::fit(cv::Mat X, double e) {
   int N = X.rows;
   double Q = -DBL_MAX;
@@ -25,12 +37,7 @@ void GMM::fit(cv::Mat X, double e) {
   while(delta >= e || delta < 0.0) {
     cv::Mat gamma = expectate(X);
     maximize(X, gamma);
-    double Q_hat = 0.0;
-    for(int i = 0; i < N; i++) {
-      for(int k = 0; k < K; k++) {
-        Q_hat += gamma.at<double>(i, k) * std::log(pi.at<double>(0, k) * likelihood.at<double>(i, k) + 0.00000000001);
-      }
-    }
+    double Q_hat = loglikelihood(gamma);
     std::cout << std::fixed << std::setprecision(-std::log(e)) << Q_hat << std::endl;
     delta = Q_hat - Q;
     Q = Q_hat;
@@ -81,6 +88,18 @@ void GMM::maximize(cv::Mat X, cv::Mat gamma) {
   pi = pi_hat.clone();
   mu = mu_hat.clone();
   sigma = sigma_hat.clone();
+}
+
+
+double GMM::loglikelihood(cv::Mat gamma) {
+  int N = gamma.rows;
+  double Q_hat = 0.0;
+  for(int i = 0; i < N; i++) {
+    for(int k = 0; k < K; k++) {
+      Q_hat += gamma.at<double>(i, k) * std::log(pi.at<double>(0, k) * likelihood.at<double>(i, k) + 0.00000000001);
+    }
+  }
+  return Q_hat;
 }
 
 
