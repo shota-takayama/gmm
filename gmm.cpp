@@ -91,36 +91,6 @@ void GMM::maximize(cv::Mat X, cv::Mat gamma) {
 }
 
 
-double GMM::loglikelihood(cv::Mat gamma) {
-  int N = gamma.rows;
-  double Q_hat = 0.0;
-  for(int i = 0; i < N; i++) {
-    for(int k = 0; k < K; k++) {
-      Q_hat += gamma.at<double>(i, k) * std::log(pi.at<double>(0, k) * likelihood.at<double>(i, k) + 0.00000000001);
-    }
-  }
-  return Q_hat;
-}
-
-
-// divide 3d Mat into bunches of 2d Mat
-cv::Mat GMM::slice(cv::Mat sigma, int k) {
-  double* data = (double*)sigma.data + k * d * d;
-  return cv::Mat(2, (int[]){d, d}, CV_64F, data);
-}
-
-
-cv::Mat GMM::posterior_prob(cv::Mat likelihood) {
-  int N = likelihood.rows;
-  cv::Mat gamma = cv::Mat::zeros(likelihood.size(), CV_64F);
-  for(int i = 0; i < N; i++) {
-    double sum = pi.row(0).dot(likelihood.row(i));
-    gamma.row(i) = pi.row(0).mul(likelihood.row(i)) / sum;
-  }
-  return gamma;
-}
-
-
 // calculate likelihood Mat
 cv::Mat GMM::gaussian(cv::Mat X) {
   int N = X.rows;
@@ -138,6 +108,36 @@ cv::Mat GMM::gaussian(cv::Mat X) {
 double GMM::_gaussian(cv::Mat x, cv::Mat mu_k, cv::Mat sigma_k) {
   cv::Mat _x = x - mu_k;
   double numer = std::exp(cv::Mat(-0.5 * _x * sigma_k.inv(cv::DECOMP_SVD) * _x.t()).at<double>(0));
-  double denom = std::pow(2 * CV_PI, 1.0 / d) * std::sqrt(cv::determinant(sigma_k));
+  double denom = std::pow(2 * CV_PI, d / 2.0) * std::sqrt(cv::determinant(sigma_k));
   return numer / denom;
+}
+
+
+cv::Mat GMM::posterior_prob(cv::Mat likelihood) {
+  int N = likelihood.rows;
+  cv::Mat gamma = cv::Mat::zeros(likelihood.size(), CV_64F);
+  for(int i = 0; i < N; i++) {
+    double sum = pi.row(0).dot(likelihood.row(i));
+    gamma.row(i) = pi.row(0).mul(likelihood.row(i)) / sum;
+  }
+  return gamma;
+}
+
+
+double GMM::loglikelihood(cv::Mat gamma) {
+  int N = gamma.rows;
+  double Q_hat = 0.0;
+  for(int i = 0; i < N; i++) {
+    for(int k = 0; k < K; k++) {
+      Q_hat += gamma.at<double>(i, k) * std::log(pi.at<double>(0, k) * likelihood.at<double>(i, k) + 0.00000000001);
+    }
+  }
+  return Q_hat;
+}
+
+
+// divide 3d Mat into bunches of 2d Mat
+cv::Mat GMM::slice(cv::Mat sigma, int k) {
+  double* data = (double*)sigma.data + k * d * d;
+  return cv::Mat(2, (int[]){d, d}, CV_64F, data);
 }

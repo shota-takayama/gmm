@@ -21,7 +21,7 @@ int main() {
   cv::Mat X = create_data(N, mu, sigma);
 
   GMM gmm(K, 1);
-  gmm.fit(X, 100);
+  gmm.fit(X, 30);
   gmm.show_params();
 
   return 0;
